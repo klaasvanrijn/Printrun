@@ -212,7 +212,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if("S" in line):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
-                    #KvR TODO at this point get T1
                     if (self.active_extruder==0):
                         self.hottgauge0.SetTarget(temp)
                         self.graph.SetExtruder0TargetTemperature(temp)
@@ -270,7 +269,6 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     self.p.send_now("M104 S"+l)
                     print _("Setting hotend temperature to %f degrees Celsius, for Extruder %d") % (f,self.active_extruder)
                     self.hsetpoint=f
-                    #KvR TODO
                     if (self.active_extruder==0):
                         self.hottgauge0.SetTarget(int(f))
                         self.graph.SetExtruder0TargetTemperature(int(f))
