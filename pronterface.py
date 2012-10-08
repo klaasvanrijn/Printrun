@@ -89,7 +89,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.helpdict["bgcolor"] = _("Pronterface background color (default: #FFFFFF)")
         self.filename=filename
         os.putenv("UBUNTU_MENUPROXY","0")
-        wx.Frame.__init__(self,None,title=_("Printer Interface"),size=size);
+        wx.Frame.__init__(self,None,title=_("Printer Interface Dual Extruder"),size=size);
         self.SetIcon(wx.Icon("P-face.ico",wx.BITMAP_TYPE_ICO))
         self.panel=wx.Panel(self,-1,size=size)
 
@@ -153,6 +153,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cur_button=None
         self.hsetpoint=0.0
         self.bsetpoint=0.0
+        
+        self.get_status_t0=1
+        self.active_extruder=0
+        self.targettemp0=0
+        self.targettemp1=0
+        self.targettempbed=0
+        self.logfile = open('Output.txt', 'w', 0)
+        
 
     def startcb(self):
         self.starttime=time.time()
@@ -203,8 +211,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if("S" in line):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
-                    self.hottgauge.SetTarget(temp)
-                    self.graph.SetExtruder0TargetTemperature(temp)
+                    #KvR TODO at this point get T1
+                    if (self.active_extruder==0):
+                        self.hottgauge0.SetTarget(temp)
+                        self.graph.SetExtruder0TargetTemperature(temp)
+                        self.targettemp0=temp
+                    else:
+                        self.hottgauge1.SetTarget(temp)
+                        self.graph.SetExtruder1TargetTemperature(temp)
+                        self.targettemp1=temp
                 except:
                     pass
             try:
@@ -217,6 +232,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     temp=float(line.split("S")[1].split("*")[0])
                     self.bedtgauge.SetTarget(temp)
                     self.graph.SetBedTargetTemperature(temp)
+                    self.targettempbed=temp
                 except:
                     pass
             try:
@@ -251,10 +267,15 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if f>=0:
                 if self.p.online:
                     self.p.send_now("M104 S"+l)
-                    print _("Setting hotend temperature to %f degrees Celsius.") % f
+                    print _("Setting hotend temperature to %f degrees Celsius, for Extruder %d") % (f,self.active_extruder)
                     self.hsetpoint=f
-                    self.hottgauge.SetTarget(int(f))
-                    self.graph.SetExtruder0TargetTemperature(int(f))
+                    #KvR TODO
+                    if (self.active_extruder==0):
+                        self.hottgauge0.SetTarget(int(f))
+                        self.graph.SetExtruder0TargetTemperature(int(f))
+                    else:
+                        self.hottgauge1.SetTarget(int(f))
+                        self.graph.SetExtruder1TargetTemperature(int(f))
                     if f>0:
                         wx.CallAfter(self.htemp.SetValue,l)
                         self.set("last_temperature",str(f))
@@ -466,6 +487,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
     def OnExit(self, event):
         self.Close()
+        self.logfile.close();
 
     def rescanports(self,event=None):
         scan=self.scanserial()
@@ -677,10 +699,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
 
-        self.hottgauge=TempGauge(self.panel,size=(200,24),title=_("Heater:"),maxval=230)
-        lls.Add(self.hottgauge,pos=(7,0),span=(1,4))
+        self.hottgauge0=TempGauge(self.panel,size=(200,24),title=_("Heater 0:"),maxval=230)
+        lls.Add(self.hottgauge0,pos=(7,0),span=(1,4))
+        self.hottgauge1=TempGauge(self.panel,size=(200,24),title=_("Heater 1:"),maxval=230)
+        lls.Add(self.hottgauge1,pos=(8,0),span=(1,4))
         self.bedtgauge=TempGauge(self.panel,size=(200,24),title=_("Bed:"),maxval=130)
-        lls.Add(self.bedtgauge,pos=(8,0),span=(1,4))
+        lls.Add(self.bedtgauge,pos=(9,0),span=(1,4))
         #def scroll_setpoint(e):
         #   if e.GetWheelRotation()>0:
         #       self.do_settemp(str(self.hsetpoint+1))
@@ -1206,10 +1230,30 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 string+=(self.tempreport.replace("\r","").replace("T:",_("Hotend") + ":").replace("B:",_("Bed") + ":").replace("\n","").replace("ok ",""))+" "
                 wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
                 try:
-                    self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                    self.bedtgauge.SetValue(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
-                    self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
+                    if(self.get_status_t0==1):
+                        self.extruder0_temperature = float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1])
+                        self.hottgauge0.SetValue(self.extruder0_temperature)
+                        self.graph.SetExtruder0Temperature(self.extruder0_temperature)
+                    
+                        self.bed_temperature = float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1])
+                        self.bedtgauge.SetValue(self.bed_temperature)
+                        self.graph.SetBedTemperature(self.bed_temperature)
+                    
+                        #KvR, write data to logfile
+                        logstring  = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        logstring +=';%s' %self.bed_temperature
+                        logstring +=';%s' %self.targettempbed
+                        logstring +=';%s' %self.extruder0_temperature
+                        logstring +=';%s' %self.targettemp0
+                        logstring +=';%s' %self.extruder1_temperature
+                        logstring +=';%s' %self.targettemp1
+                        logstring +='\n'
+                        self.logfile.write(logstring)
+                    else:
+                        self.extruder1_temperature = float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1])
+                        self.hottgauge1.SetValue(self.extruder1_temperature)
+                        self.graph.SetExtruder1Temperature(self.extruder1_temperature)
+                    
                 except:
                     pass
                 fractioncomplete = 0.0
@@ -1235,7 +1279,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     if not hasattr(self,"auto_monitor_pattern"):
                         self.auto_monitor_pattern = re.compile(r"(ok\s+)?T:[\d\.]+(\s+B:[\d\.]+)?(\s+@:[\d\.]+)?\s*")
                     self.capture_skip[self.auto_monitor_pattern]=self.capture_skip.setdefault(self.auto_monitor_pattern,0)+1
-                    self.p.send_now("M105")
+                    # KvR switch between t0 and t1
+                    if (self.get_status_t0==0):
+                        self.p.send_now("M105 T0")
+                        self.get_status_t0=1
+                    else:
+                        self.p.send_now("M105 T1")
+                        self.get_status_t0=0
                 time.sleep(self.monitor_interval)
                 while not self.sentlines.empty():
                     try:
@@ -1270,13 +1320,21 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.tempreport=l
             wx.CallAfter(self.tempdisp.SetLabel,self.tempreport.strip().replace("ok ",""))
             try:
-                self.hottgauge.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
-                self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                if (self.get_status_t0==1):
+                    self.hottgauge0.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                    self.graph.SetExtruder0Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                else:
+                    self.hottgauge1.SetValue(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
+                    self.graph.SetExtruder1Temperature(float(filter(lambda x:x.startswith("T:"),self.tempreport.split())[0].split(":")[1]))
                 self.graph.SetBedTemperature(float(filter(lambda x:x.startswith("B:"),self.tempreport.split())[0].split(":")[1]))
             except:
                 pass
         tstring=l.rstrip()
         #print tstring
+        if "Active Extruder: 0" in l:
+            self.active_extruder=0
+        if "Active Extruder: 1" in l:
+            self.active_extruder=1
         if(tstring!="ok"):
             print tstring
             #wx.CallAfter(self.logbox.AppendText,tstring+"\n")
@@ -1891,4 +1949,3 @@ if __name__ == '__main__':
         app.MainLoop()
     except:
         pass
-

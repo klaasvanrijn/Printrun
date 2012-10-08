@@ -72,8 +72,10 @@ class Graph(BufferedCanvas):
         self.AddBedTargetTemperature(self.bedtargettemps[-1])
         self.AddExtruder0Temperature(self.extruder0temps[-1])
         self.AddExtruder0TargetTemperature(self.extruder0targettemps[-1])
-        #self.AddExtruder1Temperature(self.extruder1temps[-1])
-        #self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
+        #update KvR display extruder 1 also
+        self.AddExtruder1Temperature(self.extruder1temps[-1])
+        self.AddExtruder1TargetTemperature(self.extruder1targettemps[-1])
+        
         self.Refresh()
 
 
@@ -259,8 +261,10 @@ class Graph(BufferedCanvas):
         self.drawgrid(dc, gc)
         self.drawbedtargettemp(dc, gc)
         self.drawbedtemp(dc, gc)
+		
         self.drawextruder0targettemp(dc, gc)
         self.drawextruder0temp(dc, gc)
+		
         self.drawextruder1targettemp(dc, gc)
         self.drawextruder1temp(dc, gc)
 
