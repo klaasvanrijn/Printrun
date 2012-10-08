@@ -154,6 +154,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.hsetpoint=0.0
         self.bsetpoint=0.0
         
+        #
         self.get_status_t0=1
         self.active_extruder=0
         self.targettemp0=0
