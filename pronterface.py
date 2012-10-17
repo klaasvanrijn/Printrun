@@ -212,7 +212,16 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if("S" in line):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
-                    if (self.active_extruder==0):
+                    print 'Set the target temp '
+                    print line
+                    active_extruder = self.active_extruder
+                    # extruder selected
+                    if ("T" in line):
+                        active_extruder=int(line.split("T")[1].split("*")[0])
+                        print "zet active extruder "
+                        print active_extruder
+                    
+                    if (active_extruder==0):
                         self.hottgauge0.SetTarget(temp)
                         self.graph.SetExtruder0TargetTemperature(temp)
                         self.targettemp0=temp
@@ -226,7 +235,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 self.sentlines.put_nowait(line)
             except:
                 pass
-        if("M140" in line):
+                
+        if("M140" in line or "M190" in line):
             if("S" in line):
                 try:
                     temp=float(line.split("S")[1].split("*")[0])
@@ -240,6 +250,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
 
+        
     def do_extrude(self,l=""):
         try:
             if not (l.__class__=="".__class__ or l.__class__==u"".__class__) or (not len(l)):
@@ -418,6 +429,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #    pass
 
         self.menustrip.Append(m,_("&Settings"))
+
+        m = wx.Menu()
+        self.Bind(wx.EVT_MENU, lambda *e:about(self), m.Append(-1,_("&About"),_(" About dialog")))
+        self.menustrip.Append(m,_("&Info"))
+
         self.update_macros_menu()
         self.SetMenuBar(self.menustrip)
 
@@ -1246,6 +1262,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                         logstring +=';%s' %self.targettemp0
                         logstring +=';%s' %self.extruder1_temperature
                         logstring +=';%s' %self.targettemp1
+                        logstring +=';%s' %self.p.queueindex
                         logstring +='\n'
                         self.logfile.write(logstring)
                     else:
@@ -1790,6 +1807,28 @@ class options(wx.Dialog):
                     pronterface.set(k,str(ctrls[k,1].GetValue()))
         self.Destroy()
 
+class about(wx.Dialog):
+    """About Box"""
+    def __init__(self,pronterface):
+        wx.Dialog.__init__(self, None, title=_("About Box"), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        topsizer=wx.BoxSizer(wx.VERTICAL)
+        vbox=wx.StaticBoxSizer(wx.StaticBox(self, label=_("Version 0.77 KvR")) ,wx.VERTICAL)
+        topsizer.Add(vbox,1,wx.ALL+wx.EXPAND)
+        grid=wx.FlexGridSizer(rows=0,cols=2,hgap=8,vgap=2)
+        grid.SetFlexibleDirection( wx.BOTH )
+        grid.AddGrowableCol( 1 )
+        grid.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+        vbox.Add(grid,0,wx.EXPAND)
+        ctrls = {}
+      
+        topsizer.Add(self.CreateSeparatedButtonSizer(wx.OK),0,wx.EXPAND)
+        self.SetSizer(topsizer)
+        topsizer.Layout()
+        topsizer.Fit(self)
+        if self.ShowModal()==wx.ID_OK:
+            self.Destroy()
+
+        
 class ButtonEdit(wx.Dialog):
     """Custom button edit dialog"""
     def __init__(self,pronterface):
