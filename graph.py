@@ -30,7 +30,7 @@ class Graph(BufferedCanvas):
         #super(Graph, self).__init__(parent, id, pos, size, style)
         BufferedCanvas.__init__(self, parent, id)
 
-        self.SetSize(wx.Size(170, 100))
+        self.SetSize(wx.Size(680, 100))# 4x170
 
         self.extruder0temps       = [0]
         self.extruder0targettemps = [0]
@@ -44,7 +44,7 @@ class Graph(BufferedCanvas):
 
         self.maxyvalue  = 250
         self.ybars      = 5
-        self.xbars      = 6 # One bar per 10 second
+        self.xbars      = 24 # One bar per 10 second   # 4x6
         self.xsteps     = 60 # Covering 1 minute in the graph
 
         self.y_offset   = 1 # This is to show the line even when value is 0 and maxyvalue

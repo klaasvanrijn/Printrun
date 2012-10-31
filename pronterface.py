@@ -108,9 +108,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         zcol=(180,255,180)
         self.cpbuttons=[
             [_("Motors off"),("M84"),(1,0),(250,250,250),(1,2)],
-            [_("Check temp"),("M105"),(3,5),(225,200,200),(1,3)],
-            [_("Extrude"),("extrude"),(5,0),(225,200,200),(1,2)],
-            [_("Reverse"),("reverse"),(6,0),(225,200,200),(1,2)],
+                        #[_("Check temp"),("M105"),(3,5),(225,200,200),(1,3)],
+            [_("Extrude 0"),("extrude"),(5,4),(225,200,200),(1,2)],
+            [_("Reverse 0"),("reverse"),(6,4),(225,200,200),(1,2)],
+            [_("Extrude 1"),("extrude"),(5,8),(225,200,200),(1,2)],
+            [_("Reverse 1"),("reverse"),(6,8),(225,200,200),(1,2)],
         ]
         self.custombuttons=[]
         self.btndict={}
@@ -590,7 +592,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         ubs.Add(self.pausebtn)
         #Right full view
         lrs=self.lowerrsizer=wx.BoxSizer(wx.VERTICAL)
-        self.logbox=wx.TextCtrl(self.panel,style = wx.TE_MULTILINE,size=(350,-1))
+        self.logbox=wx.TextCtrl(self.panel,style = wx.TE_MULTILINE,size=(250,-1))
         self.logbox.SetEditable(0)
         lrs.Add(self.logbox,1,wx.EXPAND)
         lbrs=wx.BoxSizer(wx.HORIZONTAL)
@@ -606,20 +608,20 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         #left pane
         lls=self.lowerlsizer=wx.GridBagSizer()
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,4),span=(1,4))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,3),span=(1,4))
         self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
-        lls.Add(wx.StaticText(self.panel,-1,_("XY:")),pos=(1,3),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        lls.Add(self.xyfeedc,pos=(1,4),span=(1,2))
-        lls.Add(wx.StaticText(self.panel,-1,_("Z:")),pos=(1,6),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        lls.Add(wx.StaticText(self.panel,-1,_("XY:")),pos=(1,2),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        lls.Add(self.xyfeedc,pos=(1,3),span=(1,2))
+        lls.Add(wx.StaticText(self.panel,-1,_("Z:")),pos=(1,5),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,-1))
-        lls.Add(self.zfeedc,pos=(1,7),span=(1,3))
+        lls.Add(self.zfeedc,pos=(1,6),span=(1,3))
 
         #lls.Add((200,375))
 
         self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked)
         lls.Add(self.xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
         self.zb = ZButtons(self.panel, self.moveZ)
-        lls.Add(self.zb, pos=(2,7), span=(1,2), flag=wx.ALIGN_CENTER)
+        lls.Add(self.zb, pos=(2,6), span=(1,2), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
 
         for i in self.cpbuttons:
@@ -632,14 +634,23 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.printerControls.append(btn)
             lls.Add(btn,pos=i[2],span=i[4])
 
+        self.bedtgauge=TempGauge(self.panel,size=(240,24),title=_("Bed:"),maxval=130)
+        lls.Add(self.bedtgauge,pos=(3,0),span=(1,4))
 
-        lls.Add(wx.StaticText(self.panel,-1,_("Heater:")),pos=(3,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+        self.hottgauge0=TempGauge(self.panel,size=(240,24),title=_("Heater 0:"),maxval=230)
+        lls.Add(self.hottgauge0,pos=(3,4),span=(1,4))
+
+        self.hottgauge1=TempGauge(self.panel,size=(240,24),title=_("Heater 1:"),maxval=230)
+        lls.Add(self.hottgauge1,pos=(3,8),span=(1,4))
+
+# KvR: Activate Heater 1 
+#        lls.Add(wx.StaticText(self.panel,-1,_("Heater 1:")),pos=(13,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
 
         self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
-        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off"))
+        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off", 0))
         self.printerControls.append(self.settoff)
-        lls.Add(self.settoff,pos=(3,1),span=(1,1))
+        lls.Add(self.settoff,pos=(4,4),span=(1,1))
 
         if self.settings.last_temperature not in map(float,self.temps.values()):
             htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
@@ -647,31 +658,54 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 choices=htemp_choices,style=wx.CB_DROPDOWN, size=(80,-1))
         self.htemp.Bind(wx.EVT_COMBOBOX,self.htemp_change)
 
-        lls.Add(self.htemp,pos=(3,2),span=(1,2))
+        lls.Add(self.htemp,pos=(4,5),span=(1,2))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1))
-        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
+        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp(0))
         self.printerControls.append(self.settbtn)
-        lls.Add(self.settbtn,pos=(3,4),span=(1,1))
+        lls.Add(self.settbtn,pos=(4,7),span=(1,1))
 
-        lls.Add(wx.StaticText(self.panel,-1,_("Bed:")),pos=(4,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+# KvR: Activate Heater 2 
+#lls.Add(wx.StaticText(self.panel,-1,_("Heater 2:")),pos=(18,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
+        htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
+                
+        self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
+        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off", 1))
+        self.printerControls.append(self.settoff)
+        lls.Add(self.settoff,pos=(4,8),span=(1,1))
+                
+        if self.settings.last_temperature not in map(float,self.temps.values()):
+            htemp_choices = [str(self.settings.last_temperature)] + htemp_choices
+        self.htemp=wx.ComboBox(self.panel, -1,
+            choices=htemp_choices,style=wx.CB_DROPDOWN, size=(80,-1))
+        self.htemp.Bind(wx.EVT_COMBOBOX,self.htemp_change)
+                
+        lls.Add(self.htemp,pos=(4,9),span=(1,2))
+        self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1))
+        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp(1))
+        self.printerControls.append(self.settbtn)
+        lls.Add(self.settbtn,pos=(4,11),span=(1,1))
+
+# KvR Heating the bed
+
+#lls.Add(wx.StaticText(self.panel,-1,_("Bed:")),pos=(4,0),span=(1,1),flag=wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT)
         btemp_choices=[self.bedtemps[i]+" ("+i+")" for i in sorted(self.bedtemps.keys(),key=lambda x:self.temps[x])]
 
         self.setboff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
         self.setboff.Bind(wx.EVT_BUTTON,lambda e:self.do_bedtemp("off"))
         self.printerControls.append(self.setboff)
-        lls.Add(self.setboff,pos=(4,1),span=(1,1))
+        lls.Add(self.setboff,pos=(4,0),span=(1,1))
 
         if self.settings.last_bed_temperature not in map(float,self.bedtemps.values()):
             btemp_choices = [str(self.settings.last_bed_temperature)] + btemp_choices
         self.btemp=wx.ComboBox(self.panel, -1,
                 choices=btemp_choices,style=wx.CB_DROPDOWN, size=(80,-1))
         self.btemp.Bind(wx.EVT_COMBOBOX,self.btemp_change)
-        lls.Add(self.btemp,pos=(4,2),span=(1,2))
+        lls.Add(self.btemp,pos=(4,1),span=(1,2))
 
         self.setbbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1))
         self.setbbtn.Bind(wx.EVT_BUTTON,self.do_bedtemp)
         self.printerControls.append(self.setbbtn)
-        lls.Add(self.setbbtn,pos=(4,4),span=(1,1))
+        lls.Add(self.setbbtn,pos=(4,3),span=(1,1))
 
         self.btemp.SetValue(str(self.settings.last_bed_temperature))
         self.htemp.SetValue(str(self.settings.last_temperature))
@@ -695,32 +729,28 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lls.Add(self.btemp,pos=(4,1),span=(1,3))
         #lls.Add(self.setbbtn,pos=(4,4),span=(1,2))
         self.tempdisp=wx.StaticText(self.panel,-1,"")
-        lls.Add(self.tempdisp,pos=(4,5),span=(1,3))
+        lls.Add(self.tempdisp,pos=(13,5),span=(1,3))
 
         self.edist=wx.SpinCtrl(self.panel,-1,"5",min=0,max=1000,size=(60,-1))
         self.edist.SetBackgroundColour((225,200,200))
         self.edist.SetForegroundColour("black")
-        lls.Add(self.edist,pos=(5,2),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm")),pos=(5,3),span=(1,1))
+        lls.Add(self.edist,pos=(5,6),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm")),pos=(5,7),span=(1,1))
         self.efeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.e_feedrate),min=0,max=50000,size=(60,-1))
         self.efeedc.SetBackgroundColour((225,200,200))
         self.efeedc.SetForegroundColour("black")
         self.efeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
-        lls.Add(self.efeedc,pos=(6,2),span=(1,1))
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(6,3),span=(1,1))
+        lls.Add(self.efeedc,pos=(6,6),span=(1,1))
+                
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(6,7),span=(1,1))
         self.xyfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.Bind(wx.EVT_SPINCTRL,self.setfeeds)
         self.zfeedc.SetBackgroundColour((180,255,180))
         self.zfeedc.SetForegroundColour("black")
         # lls.Add((10,0),pos=(0,11),span=(1,1))
 
-        self.hottgauge0=TempGauge(self.panel,size=(200,24),title=_("Heater 0:"),maxval=230)
-        lls.Add(self.hottgauge0,pos=(7,0),span=(1,4))
-        self.hottgauge1=TempGauge(self.panel,size=(200,24),title=_("Heater 1:"),maxval=230)
-        lls.Add(self.hottgauge1,pos=(8,0),span=(1,4))
-        self.bedtgauge=TempGauge(self.panel,size=(200,24),title=_("Bed:"),maxval=130)
-        lls.Add(self.bedtgauge,pos=(9,0),span=(1,4))
-        #def scroll_setpoint(e):
+
+#def scroll_setpoint(e):
         #   if e.GetWheelRotation()>0:
         #       self.do_settemp(str(self.hsetpoint+1))
         #   elif e.GetWheelRotation()<0:
@@ -728,7 +758,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
 
         self.graph = Graph(self.panel, wx.ID_ANY)
-        lls.Add(self.graph, pos=(5, 4), span=(4,4), flag=wx.ALIGN_LEFT)
+        lls.Add(self.graph, pos=(8, 0), span=(5,10), flag=wx.ALIGN_LEFT)
 
         self.gviz=gviz.gviz(self.panel,(300,300),
             build_dimensions=self.build_dimensions_list,
@@ -1703,7 +1733,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         "[^\d+-]*([+-]\d+)?" + # Y corner coordinate
         "[^\d+-]*([+-]\d+)?"   # Z corner coordinate
         ,bdim).groups()
-        defaults = [200, 200, 100, 0, 0, 0]
+        defaults = [230, 230, 100, 0, 0, 0]
         bdl_float = [float(value) if value else defaults[i] for i, value in enumerate(bdl)]
         return bdl_float
 
@@ -1880,7 +1910,7 @@ class ButtonEdit(wx.Dialog):
             self.name.SetValue(macro)
 
 class TempGauge(wx.Panel):
-    def __init__(self,parent,size=(200,22),title="",maxval=240,gaugeColour=None):
+    def __init__(self,parent,size=(600,22),title="",maxval=240,gaugeColour=None):
         wx.Panel.__init__(self,parent,-1,size=size)
         self.Bind(wx.EVT_PAINT,self.paint)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
