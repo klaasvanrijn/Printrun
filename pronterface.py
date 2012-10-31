@@ -648,7 +648,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
 
         self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
-        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off", 0))
+        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off", "0"))
         self.printerControls.append(self.settoff)
         lls.Add(self.settoff,pos=(4,4),span=(1,1))
 
@@ -660,7 +660,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         lls.Add(self.htemp,pos=(4,5),span=(1,2))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1))
-        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp(0))
+        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(4,7),span=(1,1))
 
@@ -669,7 +669,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         htemp_choices=[self.temps[i]+" ("+i+")" for i in sorted(self.temps.keys(),key=lambda x:self.temps[x])]
                 
         self.settoff=wx.Button(self.panel,-1,_("Off"),size=(36,-1))
-        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off", 1))
+        self.settoff.Bind(wx.EVT_BUTTON,lambda e:self.do_settemp("off", "1"))
         self.printerControls.append(self.settoff)
         lls.Add(self.settoff,pos=(4,8),span=(1,1))
                 
@@ -681,7 +681,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                 
         lls.Add(self.htemp,pos=(4,9),span=(1,2))
         self.settbtn=wx.Button(self.panel,-1,_("Set"),size=(38,-1))
-        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp(1))
+        self.settbtn.Bind(wx.EVT_BUTTON,self.do_settemp)
         self.printerControls.append(self.settbtn)
         lls.Add(self.settbtn,pos=(4,11),span=(1,1))
 
