@@ -278,7 +278,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         try:
             #set the active_extruder
             self.active_extruder = extruder;
-            print _("do_settemp")
+            print _("do_settemp %d")%(extruder)
             
             if (self.active_extruder==0):
                 temppointer = self.htemp
@@ -298,7 +298,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             f=float(l)
             if f>=0:
                 if self.p.online:
-                    self.p.send_now("M104 S"+l)
+                    self.p.send_now("M104 S"+l+" T"+extruder)
                     print _("Setting hotend temperature to %f degrees Celsius, for Extruder %d") % (f,self.active_extruder)
                     
                     if (self.active_extruder==0):
