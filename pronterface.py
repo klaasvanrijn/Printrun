@@ -163,7 +163,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.targettemp0=0
         self.targettemp1=0
         self.targettempbed=0
-        self.logfile = open('Output.txt', 'w', 0)
+        self.logfile = open('../Output.txt', 'w', 0)
         
 
     def startcb(self):
@@ -298,7 +298,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             f=float(l)
             if f>=0:
                 if self.p.online:
-                    sendcommand = "M104 S"+l+" T"+str(extruder)
+                    sendcommand = "M104 S"+l+" T"+str(self.active_extruder)
                     #print _("%s")%(sendcommand)
                     self.p.send_now(sendcommand)
                     print _("Setting hotend temperature to %f degrees Celsius, for Extruder %d") % (f,self.active_extruder)
@@ -2029,7 +2029,7 @@ class TempGauge(wx.Panel):
         setp_path.AddLineToPoint(setpoint,yE-5)
         gc.DrawPath(setp_path)
         # draw readout
-        text=u"T\u00B0 %u/%u"%(self.value,self.setpoint)
+        text=u"T\u00B0 %.1f/%.1f"%(self.value,self.setpoint)
         #gc.SetFont(gc.CreateFont(wx.Font(12,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
         #gc.DrawText(text,29,-2)
         gc.SetFont(gc.CreateFont(wx.Font(10,wx.FONTFAMILY_DEFAULT,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_BOLD),wx.WHITE))
