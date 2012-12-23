@@ -298,7 +298,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             f=float(l)
             if f>=0:
                 if self.p.online:
-                    self.p.send_now("M104 S"+l+" T"+extruder)
+                    sendcommand = "M104 S"+l+" T"+str(extruder)
+                    #print _("%s")%(sendcommand)
+                    self.p.send_now(sendcommand)
                     print _("Setting hotend temperature to %f degrees Celsius, for Extruder %d") % (f,self.active_extruder)
                     
                     if (self.active_extruder==0):
