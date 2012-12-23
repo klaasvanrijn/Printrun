@@ -327,7 +327,7 @@ msgstr ""
 
 #: pronterface.py:581 pronterface.py:601
 msgid "Set"
-msgstr "Stel in"
+msgstr "Set"
 
 #: pronterface.py:586 pronterface.py:649
 msgid "Bed:"
@@ -706,3 +706,4 @@ msgstr "Kleur"
 
 #~ msgid "&Print"
 #~ msgstr "&Printen"
+
