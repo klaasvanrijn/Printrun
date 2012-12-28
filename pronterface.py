@@ -97,7 +97,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.capture_skip={}
         self.capture_skip_newline=False
         self.tempreport=""
-        self.monitor=0
+        self.monitor=1      #default set to true
         self.f=None
         self.skeinp=None
         self.monitor_interval=3
@@ -299,7 +299,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             if f>=0:
                 if self.p.online:
                     sendcommand = "M104 S"+l+" T"+str(self.active_extruder)
-                    #print _("%s")%(sendcommand)
+                    print _("%s")%(sendcommand)
                     self.p.send_now(sendcommand)
                     print _("Setting hotend temperature to %f degrees Celsius, for Extruder %d") % (f,self.active_extruder)
                     
@@ -633,7 +633,7 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
 
         #left pane
         lls=self.lowerlsizer=wx.GridBagSizer()
-        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,3),span=(1,4))
+        lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,3),span=(1,1))
         self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
         lls.Add(wx.StaticText(self.panel,-1,_("XY:")),pos=(1,2),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         lls.Add(self.xyfeedc,pos=(1,3),span=(1,2))
@@ -644,9 +644,9 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #lls.Add((200,375))
 
         self.xyb = XYButtons(self.panel, self.moveXY, self.homeButtonClicked)
-        lls.Add(self.xyb, pos=(2,0), span=(1,6), flag=wx.ALIGN_CENTER)
+        lls.Add(self.xyb, pos=(2,0), span=(1,5), flag=wx.ALIGN_CENTER)
         self.zb = ZButtons(self.panel, self.moveZ)
-        lls.Add(self.zb, pos=(2,6), span=(1,2), flag=wx.ALIGN_CENTER)
+        lls.Add(self.zb, pos=(2,5), span=(1,1), flag=wx.ALIGN_CENTER)
         wx.CallAfter(self.xyb.SetFocus)
 
         for i in self.cpbuttons:
@@ -834,6 +834,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #self.panel.Fit()
         #uts.Layout()
         self.cbuttons_reload()
+            
+        #default display the graph
+        self.monitorbox.SetValue(1)
+        self.setmonitor(None)
+    
 
 
     def plate(self,e):

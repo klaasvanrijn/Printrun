@@ -43,11 +43,11 @@ class Graph(BufferedCanvas):
         self.Bind(wx.EVT_TIMER, self.updateTemperatures, self.timer)
 
         self.maxyvalue  = 250
-        self.ybars      = 5
+        self.ybars      = 6
         self.xbars      = 24 # One bar per 10 second   # 4x6
-        self.xsteps     = 60 # Covering 1 minute in the graph
+        self.xsteps     = 300 # Covering 5 minutes in the graph
 
-        self.y_offset   = 1 # This is to show the line even when value is 0 and maxyvalue
+        self.y_offset   = 10 # This is to show the line even when value is 0 and maxyvalue
 
         self._lastyvalue = 0
 
