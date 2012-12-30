@@ -1,0 +1,5 @@
+#!/bin/bash
+#this is a comment-the first line sets bash as the shell script
+VERSIONER_PYTHON_PREFER_32_BIT=yes;
+python /Users/kvr/Projects/github/Printrun/pronterface.py;
+exit;
