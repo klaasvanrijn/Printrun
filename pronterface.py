@@ -109,10 +109,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         self.cpbuttons=[
             [_("Motors off"),("M84"),(1,0),(250,250,250),(1,2)],
                         #[_("Check temp"),("M105"),(3,5),(225,200,200),(1,3)],
-            [_("Extrude 0"),("extrude"),(5,4),(225,200,200),(1,2)],
-            [_("Reverse 0"),("reverse"),(6,4),(225,200,200),(1,2)],
-            [_("Extrude 1"),("extrude"),(5,8),(225,200,200),(1,2)],
-            [_("Reverse 1"),("reverse"),(6,8),(225,200,200),(1,2)],
+            [_("Extrude 0"),("extrude0"),(5,4),(225,200,200),(1,2)],
+            [_("Reverse 0"),("reverse0"),(6,4),(225,200,200),(1,2)],
+            [_("Extrude 1"),("extrude1"),(5,8),(225,200,200),(1,2)],
+            [_("Reverse 1"),("reverse1"),(6,8),(225,200,200),(1,2)],
         ]
         self.custombuttons=[]
         self.btndict={}
@@ -253,7 +253,13 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             except:
                 pass
 
-        
+    # added functions for extruder 0 and 1   
+    def do_extrude0(self, l="", extruder=0):
+        self.do_extrude(l, extruder)
+
+    def do_extrude1(self, l="", extruder=1):
+        self.do_extrude(l, extruder)
+    
     def do_extrude(self,l="", extruder=0):
         try:
             self.active_extruder = extruder;
@@ -263,6 +269,14 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pronsole.pronsole.do_extrude(self,l)
         except:
             raise
+    
+    # added functions for extruder 0 and 1 
+    def do_reverse0(self,l="", extruder=0):
+        self.do_reverse(l, extruder)
+
+
+    def do_reverse1(self,l="", extruder=1):
+        self.do_reverse(l, extruder)
 
     def do_reverse(self,l="", extruder=0):
         try:
@@ -273,6 +287,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             pronsole.pronsole.do_extrude(self,l)
         except:
             pass
+
+    def do_reverse1(self,l="", extruder=1):
+        self.do_reverse(l, extruder)
+
 
     def do_settemp(self,l="", extruder=0):
         try:

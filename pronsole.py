@@ -1019,7 +1019,8 @@ class pronsole(cmd.Cmd):
     
     def do_extrude(self,l,override=None,overridefeed=300):
         length=5#default extrusion length
-        feed=self.settings.e_feedrate#default speed
+        feed=self.settings.e_feedrate#default speed       
+        
         if not self.p.online:
             print "Printer is not online. Unable to move."
             return
@@ -1046,6 +1047,7 @@ class pronsole(cmd.Cmd):
             print "Reversing %fmm of filament."%(-1*length,)
         else:
             "Length is 0, not doing anything."
+        self.p.send_now("T"+str(self.active_extruder))
         self.p.send_now("G91")
         self.p.send_now("G1 E"+str(length)+" F"+str(feed))
         self.p.send_now("G90")
