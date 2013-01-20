@@ -654,10 +654,10 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         lls.Add(wx.StaticText(self.panel,-1,_("mm/min")),pos=(0,3),span=(1,1))
         self.xyfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.xy_feedrate),min=0,max=50000,size=(70,-1))
         lls.Add(wx.StaticText(self.panel,-1,_("XY:")),pos=(1,2),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        lls.Add(self.xyfeedc,pos=(1,3),span=(1,2))
-        lls.Add(wx.StaticText(self.panel,-1,_("Z:")),pos=(1,5),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        lls.Add(self.xyfeedc,pos=(1,3),span=(1,1))
+        lls.Add(wx.StaticText(self.panel,-1,_("Z:")),pos=(1,4),span=(1,1), flag=wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         self.zfeedc=wx.SpinCtrl(self.panel,-1,str(self.settings.z_feedrate),min=0,max=50000,size=(70,-1))
-        lls.Add(self.zfeedc,pos=(1,6),span=(1,3))
+        lls.Add(self.zfeedc,pos=(1,5),span=(1,1))
 
         #lls.Add((200,375))
 
@@ -800,10 +800,11 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
         #       self.do_settemp(str(max(0,self.hsetpoint-1)))
         #self.tgauge.Bind(wx.EVT_MOUSEWHEEL,scroll_setpoint)
 
+        #display the graph with temperatures
         self.graph = Graph(self.panel, wx.ID_ANY)
         lls.Add(self.graph, pos=(8, 0), span=(5,10), flag=wx.ALIGN_LEFT)
 
-        self.gviz=gviz.gviz(self.panel,(300,300),
+        self.gviz=gviz.gviz(self.panel,(250,250),
             build_dimensions=self.build_dimensions_list,
             grid=(self.settings.preview_grid_step1,self.settings.preview_grid_step2),
             extrusion_width=self.settings.preview_extrusion_width)
@@ -1385,6 +1386,8 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
                     else:
                         self.p.send_now("M105 T1")
                         self.get_status_t0=0
+                    # Update 20/1/2013 request the position
+                    self.p.send_now("M114")
                 time.sleep(self.monitor_interval)
                 while not self.sentlines.empty():
                     try:
@@ -1434,6 +1437,12 @@ class PronterWindow(wx.Frame,pronsole.pronsole):
             self.active_extruder=0
         if "Active Extruder: 1" in l:
             self.active_extruder=1
+        # Response from M114
+        if "X:" in l:
+            self.tempreport=l
+            print self.tempreport.split("Count")[1].split("Y:")[0].split("X:")[1]
+            print self.tempreport.split("Count")[1].split("Y:")[1]
+            tstring="ok"
         if(tstring!="ok"):
             print tstring
             #wx.CallAfter(self.logbox.AppendText,tstring+"\n")
